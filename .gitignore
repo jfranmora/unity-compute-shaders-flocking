@@ -1,3 +1,4 @@
+/.idea/
 /[Ll]ibrary/
 /[Tt]emp/
 /[Oo]bj/
@@ -19,3 +20,7 @@
 
 # Unity3D Generated File On Crash Reports
 sysinfo.txt
+
+Assets/Plugins/Editor/JetBrains/
+
+Assets/Plugins/Editor/JetBrains\.meta

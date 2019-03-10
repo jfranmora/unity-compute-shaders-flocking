@@ -1,0 +1,67 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel FlockingMesh
+#define GROUP_SIZE 512
+#define FLOCK_SIZE 0.5
+#define TRIANGLES_PER_BOID 6
+#define VERTEX_PER_BOID TRIANGLES_PER_BOID * 3
+
+struct Boid 
+{
+    float3 position;
+    float3 forward;
+    float3 targetDir;
+    float2 boidOptions;
+    int neighbours;
+    int cell;
+};
+
+RWStructuredBuffer<Boid> boidBuffer;
+RWStructuredBuffer<float3> vertexBuffer;
+RWStructuredBuffer<float3> normalBuffer;
+
+float3 perp (float3 pos) 
+{
+    return pos.z < pos.x ? float3(pos.y,-pos.x,0) : float3(0,-pos.z, pos.y) ;
+}
+
+void AddTriangle(int instanceId, int triangleIndex, float3 a, float3 b, float3 c) 
+{
+    vertexBuffer[VERTEX_PER_BOID * instanceId + 3 * triangleIndex + 0] = a;
+    vertexBuffer[VERTEX_PER_BOID * instanceId + 3 * triangleIndex + 1] = b;
+    vertexBuffer[VERTEX_PER_BOID * instanceId + 3 * triangleIndex + 2] = c;
+    
+    float3 normal = cross(b-a, c-a);
+    
+    normalBuffer[VERTEX_PER_BOID * instanceId + 3 * triangleIndex + 0] = normal;
+    normalBuffer[VERTEX_PER_BOID * instanceId + 3 * triangleIndex + 1] = normal;
+    normalBuffer[VERTEX_PER_BOID * instanceId + 3 * triangleIndex + 2] = normal;
+}
+
+void GenBoidVertex(int instanceId) 
+{
+    Boid boid = boidBuffer[instanceId];
+    float3 pos = boid.position;
+    float3 fwd = normalize(boid.forward);
+    float3 right = normalize(perp(fwd));// cross(float3(0,1,0), fwd);
+    float3 up = normalize(cross(fwd, right));
+    
+    float3 a = pos + fwd * FLOCK_SIZE / 2.0;
+    float3 b = pos - fwd * FLOCK_SIZE / 2.0 + (right + up) * FLOCK_SIZE / 4.0;
+    float3 c = pos - fwd * FLOCK_SIZE / 2.0 + (-right + up) * FLOCK_SIZE / 4.0;
+    float3 d = pos - fwd * FLOCK_SIZE / 2.0 + (+right - up) * FLOCK_SIZE / 4.0;
+    float3 e = pos - fwd * FLOCK_SIZE / 2.0 + (-right - up) * FLOCK_SIZE / 4.0;
+       
+    AddTriangle(instanceId, 0, a, b, c);
+    AddTriangle(instanceId, 1, a, d, b);
+    AddTriangle(instanceId, 2, a, c, e);
+    AddTriangle(instanceId, 3, a, e, d);
+    AddTriangle(instanceId, 4, c, b, e);
+    AddTriangle(instanceId, 5, b, d, e); 
+}
+
+[numthreads(GROUP_SIZE, 1, 1)]
+void FlockingMesh (uint3 id : SV_DispatchThreadID) 
+{
+    uint instanceId = id.x;
+    GenBoidVertex(instanceId);
+}

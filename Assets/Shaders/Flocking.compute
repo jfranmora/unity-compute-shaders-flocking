@@ -1,0 +1,133 @@
+﻿#include "noise2D.cginc"
+
+#pragma kernel Flocking
+#define GROUP_SIZE 512
+#define MAX_POSITION int3(50,50,50)
+#define MIN_POSITION int3(-50,-50,-50)
+#define GRID_SIZE 5
+
+float time;
+float dt;
+int boidCount;
+
+// x -> Boid distance
+// y -> Neighbour distance
+// z -> Separation distance
+// w -> separate
+float3 stageSize;
+float4 simulationSettings;
+
+struct Boid 
+{
+    float3 position;
+    float3 forward;
+    float3 targetDir;
+    float2 boidOptions;
+    int neighbours;
+    int cell;    
+};
+
+RWStructuredBuffer<Boid> boidBuffer;
+
+int calculateCell(in float3 pos) {
+    pos = clamp(pos, -stageSize, stageSize);    // [-stageSize, stageSize]    
+    pos += stageSize;                           // [0, 2 * stageSize]
+    pos /= stageSize * 2;                       // [0, 1]
+    pos *= GRID_SIZE;                           // [0, GRID_SIZE]
+    pos = clamp(pos, float3(0,0,0), float3(1,1,1) * GRID_SIZE - 1); // [0, GRID_SIZE - 1]    
+    return (int)pos.x + GRID_SIZE * (int)pos.y;
+}
+
+float sdBox(float3 p, float3 b)
+{
+    float3 d = abs(p) - b;
+    return length(max(d,0.0))
+         + min(max(d.x,max(d.y,d.z)),0.0); // remove this line for an only partially signed sdf 
+}
+
+Boid Flock(Boid boid, int instanceId) 
+{
+    // Cache
+    float3 boid_pos = boid.position;
+    float3 boid_fwd = boid.forward;
+    
+    // Distance from center    
+    boid.neighbours = 0;      
+
+    float3 separation = float3(0.0, 0.0, 0.0);
+    float3 alignment = float3(0.0, 0.0, 0.0);
+    float3 cohesion = boid_pos;
+        
+    uint neighbourCount = 0;
+    
+    [loop]
+    for (int i = 0; i < boidCount; i++) 
+    {
+        if (i == instanceId) continue;
+        
+        Boid tempBoid = boidBuffer[i];
+        float3 tempboid_pos = tempBoid.position;
+        
+        // Visibility, simple distance
+        float3 diff = tempboid_pos - boid_pos;
+        float dist = length(diff);
+        if (dist > simulationSettings.y) continue;
+        
+        // Visibility, angle
+        if (dot(boid_fwd, diff) < -.5) continue;
+        
+        neighbourCount++;
+        
+        // Separation
+        if (dist < simulationSettings.z) {
+            float n = dist / simulationSettings.z;
+            separation += normalize(-diff) * (1 - n);
+        }
+        
+        // Cohesion
+        cohesion += tempboid_pos;
+        
+        // Alignment
+        alignment += tempBoid.forward;
+    }
+    
+    if (neighbourCount  == 0) return boid; 
+    
+    boid.neighbours = neighbourCount;
+   
+    float avg = 1.0 / (neighbourCount + 1);
+    alignment *= avg;
+    cohesion *= avg;        // center
+    cohesion = normalize(cohesion - boid_pos);
+    
+    separation = length(separation > 0) ? normalize(separation) : separation;
+    
+    // boid.targetDir = separation;
+    float3 flockDir = separation + cohesion + alignment;
+    float3 sepDir = length(separation) > 0 ? separation : boid_fwd;
+    boid.targetDir = lerp(flockDir, sepDir, saturate(simulationSettings.w));
+    
+    if (sdBox(boid_pos, stageSize) > 0) {
+        boid.targetDir = lerp(normalize(boid.targetDir), normalize(-boid_pos), .75);
+    }
+        
+    return boid;
+}
+
+[numthreads(GROUP_SIZE, 1, 1)]
+void Flocking (uint3 id : SV_DispatchThreadID)
+{    
+    uint instanceId = id.x;
+    Boid boid = boidBuffer[instanceId];
+    
+    // FLOCKING
+    boid = Flock(boid, instanceId);
+    
+    // MOVEMENT
+    float speed = boid.boidOptions.x * (.5 + .5 * noise(float2(time / .01, instanceId)));
+    boid.forward = lerp(boid.forward, normalize(boid.targetDir), 5 * dt);
+    boid.position += normalize(boid.forward) * speed * dt;  
+    boid.cell = calculateCell(boid.position);
+        
+    boidBuffer[instanceId] = boid;   
+}

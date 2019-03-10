@@ -1,0 +1,33 @@
+#pragma kernel FlockingMidi
+
+struct Boid 
+{
+    float3 position;
+    float3 forward;
+    float3 targetDir;
+    float2 boidOptions;
+    int neighbours;
+    int cell;
+};
+
+
+int boidCount;
+float3 stageSize;
+RWStructuredBuffer<int> countBuffer;
+RWStructuredBuffer<Boid> boidBuffer;
+
+int GetCell(float3 pos) {
+    return 0;
+}
+
+[numthreads(64, 1, 1)]
+void FlockingMidi (uint3 id : SV_DispatchThreadID) 
+{
+    int sum = 0;
+     
+    for (int i = 0; i < boidCount; i++) {
+        if (boidBuffer[i].cell == id.x) sum++;
+    }
+    
+    countBuffer[id.x] = sum;
+}
