@@ -7,6 +7,8 @@ Shader "Custom/Unlit/BoidColor"
     Properties
     {
         _MainTex ("Texture", 2D) = "white" {}
+        _Offset ("Position Offset", Vector) = (0, 0, 0)
+        _StageSize ("Stage Size", Vector) = (25, 25, 25)
     }
     SubShader
     {
@@ -58,6 +60,8 @@ Shader "Custom/Unlit/BoidColor"
 
             sampler2D _MainTex;
             float4 _MainTex_ST;
+            fixed3 _Offset;
+            fixed3 _StageSize;
 
             v2f vert (appdata v)
             {
@@ -73,7 +77,8 @@ Shader "Custom/Unlit/BoidColor"
             {   
                 // Vertex color          
                 fixed4 col;
-                col.rgb = (i.worldPos.xyz - float3(-2.5, -15, -2.5)) / 25.0;
+                col.rgb = (i.worldPos.xyz + _Offset) / _StageSize;
+                // col.rgb = clamp(col.rgb, float3(0,0,0), float3(1,1,1));
                 col.a = 1;
                 
                 float3 hsv = rgb2hsv(normalize(col.rgb));

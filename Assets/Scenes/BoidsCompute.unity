@@ -282,7 +282,6 @@ GameObject:
   m_Component:
   - component: {fileID: 330686284}
   - component: {fileID: 330686283}
-  - component: {fileID: 330686282}
   m_Layer: 0
   m_Name: FlockingGPU
   m_TagString: Untagged
@@ -290,22 +289,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &330686282
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 330686281}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 328cf11b69e7f244387ae1377865f71a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  manager: {fileID: 330686283}
-  flockPrefab: {fileID: 5457475671424220323, guid: 0c11190af6660ef4cb2d7a9d13da0a38,
-    type: 3}
-  flocks: []
 --- !u!114 &330686283
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -320,7 +303,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   boidCount: 16384
   compute: {fileID: 7200000, guid: 4c69af00d91da7646a1bc79d569356f0, type: 3}
-  maxBoidDistance: 15
+  maxBoidDistance: 25
   boidNeighbourDistance: 1.5
   boidSeparationDistance: 1
   separate: 0
