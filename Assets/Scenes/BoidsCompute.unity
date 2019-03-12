@@ -213,9 +213,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   generator: {fileID: 7200000, guid: 3ed69f0f426ebb44382a6ad5ee351984, type: 3}
-  vertex: []
-  normals: []
-  indices: 
 --- !u!33 &247628433
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -327,12 +324,6 @@ MonoBehaviour:
   boidNeighbourDistance: 1.5
   boidSeparationDistance: 1
   separate: 0
-  flockColors:
-  - {r: 1, g: 0.7681818, b: 0.7909092, a: 0}
-  - {r: 0.8495146, g: 1, b: 0.20873785, a: 0}
-  - {r: 0.011494279, g: 1, b: 0.7356323, a: 0}
-  - {r: 0.57416266, g: 1, b: 0.9330144, a: 0}
-  data: []
 --- !u!4 &330686284
 Transform:
   m_ObjectHideFlags: 0

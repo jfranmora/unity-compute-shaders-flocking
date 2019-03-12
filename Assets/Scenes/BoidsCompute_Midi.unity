@@ -213,9 +213,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   generator: {fileID: 7200000, guid: 3ed69f0f426ebb44382a6ad5ee351984, type: 3}
-  vertex: []
-  normals: []
-  indices: 
 --- !u!33 &247628433
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -285,7 +282,6 @@ GameObject:
   m_Component:
   - component: {fileID: 330686284}
   - component: {fileID: 330686283}
-  - component: {fileID: 330686282}
   m_Layer: 0
   m_Name: FlockingGPU
   m_TagString: Untagged
@@ -293,22 +289,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &330686282
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 330686281}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 328cf11b69e7f244387ae1377865f71a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  manager: {fileID: 330686283}
-  flockPrefab: {fileID: 5457475671424220323, guid: 0c11190af6660ef4cb2d7a9d13da0a38,
-    type: 3}
-  flocks: []
 --- !u!114 &330686283
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -327,12 +307,6 @@ MonoBehaviour:
   boidNeighbourDistance: 1.5
   boidSeparationDistance: 1
   separate: 0
-  flockColors:
-  - {r: 1, g: 0.7681818, b: 0.7909092, a: 0}
-  - {r: 0.8495146, g: 1, b: 0.20873785, a: 0}
-  - {r: 0.011494279, g: 1, b: 0.7356323, a: 0}
-  - {r: 0.57416266, g: 1, b: 0.9330144, a: 0}
-  data: []
 --- !u!4 &330686284
 Transform:
   m_ObjectHideFlags: 0
@@ -520,7 +494,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4bf009d3f6daf974581981c305d21f6a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  disableMidi: 0
+  disableMidi: 1
   midiDevice: 0
   channel: 0
   pitches: 2400000026000000280000002b0000002d00000030000000320000003400000037000000390000003c0000003e000000400000004300000045000000480000004a0000004c0000004f000000510000005400000056000000580000005b0000005d000000
@@ -528,8 +502,8 @@ MonoBehaviour:
   lowThreshold: 0
   computeShader: {fileID: 7200000, guid: 6527cb12affd49509d5a71a1b8d4ca54, type: 3}
   countData: 
-  midiIn: 
   midiInBuffer: 
+  midiCurrentBuffer: 
 --- !u!4 &1063613497
 Transform:
   m_ObjectHideFlags: 0
