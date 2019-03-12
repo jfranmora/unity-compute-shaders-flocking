@@ -1,10 +1,11 @@
-﻿#include "noise2D.cginc"
+﻿#pragma kernel CSMain
 
-#pragma kernel Flocking
 #define GROUP_SIZE 512
 #define MAX_POSITION int3(50,50,50)
 #define MIN_POSITION int3(-50,-50,-50)
 #define GRID_SIZE 5
+
+#include "noise2D.cginc"
 
 float time;
 float dt;
@@ -115,7 +116,7 @@ Boid Flock(Boid boid, int instanceId)
 }
 
 [numthreads(GROUP_SIZE, 1, 1)]
-void Flocking (uint3 id : SV_DispatchThreadID)
+void CSMain (uint3 id : SV_DispatchThreadID)
 {    
     uint instanceId = id.x;
     Boid boid = boidBuffer[instanceId];

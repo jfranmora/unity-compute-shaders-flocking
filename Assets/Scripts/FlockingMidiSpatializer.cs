@@ -1,10 +1,11 @@
-﻿using System;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using Midi;
 using UnityEngine;
 
 public class FlockingMidiSpatializer : MonoBehaviour
 {
+	private const int NOTE_COUNT = 25;
+	
 	[Header("Midi config")] 
 	public bool disableMidi;
 	public int midiDevice = 1;
@@ -22,8 +23,8 @@ public class FlockingMidiSpatializer : MonoBehaviour
 	[Header("GPU")]
 	public ComputeShader computeShader;
 	public int[] countData;
-	public bool[] midiIn;
 	public bool[] midiInBuffer;
+	public bool[] midiCurrentBuffer;
     
 	private ComputeBuffer countBuffer;
 	private int shaderKernel;
@@ -45,9 +46,9 @@ public class FlockingMidiSpatializer : MonoBehaviour
 
 	private void Start()
 	{
-		countData = new int[25];
-		midiIn = new bool[25];
-		midiInBuffer = new bool[25];
+		countData = new int[NOTE_COUNT];
+		midiInBuffer = new bool[NOTE_COUNT];
+		midiCurrentBuffer = new bool[NOTE_COUNT];
 		
 		InitComputeShader();
 		InitMidiDevice();
@@ -69,7 +70,7 @@ public class FlockingMidiSpatializer : MonoBehaviour
 
 	private void OnDrawGizmosSelected()
 	{
-		if (countData.Length < 25 || midiIn.Length < 25) return;
+		if (countData.Length < NOTE_COUNT || midiCurrentBuffer.Length < NOTE_COUNT) return;
 
 		var size = manager.stageSize * 2;
 		float w = size.x / 5;
@@ -83,7 +84,7 @@ public class FlockingMidiSpatializer : MonoBehaviour
 		{
 			for (var y = 0; y < 5; y++)
 			{
-				Gizmos.color = midiIn[x + 5 * y] ? new Color(1,0,0,.25f) : new Color(.2f, .2f, .2f,.25f);
+				Gizmos.color = midiCurrentBuffer[x + 5 * y] ? new Color(1,0,0,.25f) : new Color(.2f, .2f, .2f,.25f);
 				Gizmos.DrawCube(startPos + new Vector3(x * w,y * h,0), new Vector3(w,h,prof));
 			}
 		}
@@ -94,7 +95,7 @@ public class FlockingMidiSpatializer : MonoBehaviour
 		countBuffer = new ComputeBuffer(countData.Length, Marshal.SizeOf(typeof(int)));       
 		countBuffer.SetData(countData);   
         
-		shaderKernel = computeShader.FindKernel("FlockingMidi");
+		shaderKernel = computeShader.FindKernel("CSMain");
 	}
 
 	private void SetComputeData()
@@ -135,64 +136,43 @@ public class FlockingMidiSpatializer : MonoBehaviour
 	}
 
 	private void UpdateMidiDevice()
-	{
-		// Clear midi
-		for (var i = 0; i < 25; i++)
+	{		
+		// Calculate density
+		int max = Mathf.Max(countData);
+		for (var i = 0; i < NOTE_COUNT; i++)
 		{
-			midiIn[i] = false;
-		}
-		
-		// Calculate things
-		int max = countData[0];
-		for (var i = 1; i < 25; i++)
-		{
-			max = Mathf.Max(max, countData[i]);
-		}
-
-		for (var i = 0; i < 25; i++)
-		{
-			midiIn[i] = 
+			midiInBuffer[i] = 
 				((countData[i] / (float)max) > highThreshold) ||
 				((countData[i] / (float)max) < lowThreshold);
 		}
 		
-		// Send midi
-		if (!disableMidi)
+		for (var i = 0; i < NOTE_COUNT; i++)
 		{
-			for (var i = 0; i < 25; i++)
-			{
-				if (midiIn[i] != midiInBuffer[i])
-				{
-					if (midiIn[i]) SendNoteOn(i);
-					else SendNoteOff(i);
-				}
-				
-				midiInBuffer[i] = midiIn[i];
-			}
-		}
-		else
-		{
-			for (var i = 0; i < 25; i++)
-			{
-				midiInBuffer[i] = midiIn[i];
-			}
+			if (midiInBuffer[i]) SendNoteOn(i);
+			else SendNoteOff(i);
+			
+			// Clear input buffer
+			midiInBuffer[i] = false;
 		}
 	}
 
 	private void DeinitMidiDevice()
 	{
+		SilenceCurrent();
+		
 		if (outputDevice != null && outputDevice.IsOpen)
-		{
-			outputDevice.SilenceAllNotes();
-            
+		{            
 			outputDevice.Close();
 		} 
 	}
 
+	/// <summary>
+	/// C Pentatonic scale 
+	/// </summary>
 	[ContextMenu("Setup notes")]
 	public void SetupNotes()
 	{
-		pitches = new Pitch[25];
+		pitches = new Pitch[NOTE_COUNT];
         
 		pitches[0] = Pitch.C2;
 		pitches[1] = Pitch.D2;
@@ -251,7 +231,7 @@ public class FlockingMidiSpatializer : MonoBehaviour
 	{
 		if (!Application.isPlaying) return;
 		
-		for (var i = 0; i < midiInBuffer.Length; i++)
+		for (var i = 0; i < midiCurrentBuffer.Length; i++)
 		{
 			SendNoteOff(i);
 		}
@@ -259,15 +239,19 @@ public class FlockingMidiSpatializer : MonoBehaviour
 
 	private void SendNoteOn(int index)
 	{
-		if (outputDevice == null) return;
-		
+		if (midiCurrentBuffer[index]) return;
+		midiCurrentBuffer[index] = true;
+				
+		if (disableMidi || outputDevice == null) return;
 		outputDevice.SendNoteOn(channel, pitches[index], 127);		
 	}
 
 	private void SendNoteOff(int index)
 	{
-		if (outputDevice == null) return;
-		
-		outputDevice.SendNoteOff(channel, pitches[index], 127);
+		if (!midiCurrentBuffer[index]) return;
+		midiCurrentBuffer[index] = false;
+
+		if (disableMidi || outputDevice == null) return;
+		outputDevice.SendNoteOff(channel, pitches[index], 127);		
 	}
 }

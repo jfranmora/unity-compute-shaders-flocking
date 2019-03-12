@@ -1,5 +1,6 @@
 ﻿// Each #kernel tells which function to compile; you can have many kernels
-#pragma kernel FlockingMesh
+#pragma kernel CSMain
+
 #define GROUP_SIZE 512
 #define FLOCK_SIZE 0.5
 #define TRIANGLES_PER_BOID 6
@@ -60,7 +61,7 @@ void GenBoidVertex(int instanceId)
 }
 
 [numthreads(GROUP_SIZE, 1, 1)]
-void FlockingMesh (uint3 id : SV_DispatchThreadID) 
+void CSMain (uint3 id : SV_DispatchThreadID) 
 {
     uint instanceId = id.x;
     GenBoidVertex(instanceId);

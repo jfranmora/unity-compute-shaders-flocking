@@ -2,7 +2,7 @@
 
 // Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
 
-Shader "Custom/Unlit/WorldColor"
+Shader "Custom/Unlit/BoidColor"
 {
     Properties
     {
@@ -46,7 +46,6 @@ Shader "Custom/Unlit/WorldColor"
             {
                 float4 vertex : POSITION;
                 float2 uv : TEXCOORD0;
-                float4 color : COLOR;
             };
 
             struct v2f
@@ -54,7 +53,6 @@ Shader "Custom/Unlit/WorldColor"
                 float2 uv : TEXCOORD0;
                 UNITY_FOG_COORDS(1)
                 float4 vertex : SV_POSITION;
-                float4 color : COLOR;
                 float3 worldPos : TEXCOORD1;
             };
 
@@ -67,7 +65,6 @@ Shader "Custom/Unlit/WorldColor"
                 o.vertex = UnityObjectToClipPos(v.vertex);                              
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);                
                 UNITY_TRANSFER_FOG(o,o.vertex);
-                o.color = v.color;
                 o.worldPos = mul (unity_ObjectToWorld, v.vertex).xyz;                
                 return o;
             }
@@ -77,6 +74,7 @@ Shader "Custom/Unlit/WorldColor"
                 // Vertex color          
                 fixed4 col;
                 col.rgb = (i.worldPos.xyz - float3(-2.5, -15, -2.5)) / 25.0;
+                col.a = 1;
                 
                 float3 hsv = rgb2hsv(normalize(col.rgb));
                 hsv.z = 1;

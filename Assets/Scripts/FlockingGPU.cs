@@ -82,7 +82,7 @@ public class FlockingGPU : MonoBehaviour
 
 		boidBuffer = new ComputeBuffer(boidCount, Marshal.SizeOf(typeof(Boid)));
 		boidBuffer.SetData(data);
-		shaderKernel = compute.FindKernel("Flocking");
+		shaderKernel = compute.FindKernel("CSMain");
 	}
 
 	private void SetComputeData()

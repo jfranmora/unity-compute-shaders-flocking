@@ -90,7 +90,7 @@ public class FlockingGPUMesh : MonoBehaviour
 		normalBuffer = new ComputeBuffer(manager.boidCount * VERTEX_PER_BOID, Marshal.SizeOf(typeof(Vector3)));
 //        colorBuffer = new ComputeBuffer(manager.boidCount * VERTEX_PER_BOID, Marshal.SizeOf(typeof(Color)));
 
-		shaderKernel = generator.FindKernel("FlockingMesh");
+		shaderKernel = generator.FindKernel("CSMain");
 	}
 
 	private void ComputeMesh()
